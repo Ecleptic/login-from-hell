@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge,chrome=1">
+    <title>Log In</title>
+
+</head>
+
+<body>
+    <input type="file" onchange="previewFile()">
+    <img hidden src="" height="200" alt="Image preview...">
+    <h1 id="error" style="color:red"></h1>
+    <div id="ocr"></div>
+
+</body>
+<script>
+    const page = document.querySelector('#ocr')
+
+    function isCorrectFile() {
+        const ext = document.querySelector('input[type=file]').files[0].name.slice(-4) //sames as here
+        const errorText = document.querySelector("#error")
+        if (ext !== "tiff") {
+            errorText.innerHTML = "Incorrect Extension"
+        } else {
+            errorText.innerHTML = ""
+            previewFile()
+        }
+    }
+
+    function previewFile() {
+        const preview = document.querySelector('img') //selects the query named img
+        const file = document.querySelector('input[type=file]').files[0] //sames as here
+
+
+        const reader = new FileReader()
+        reader.onloadend = function () {
+            preview.removeAttribute("hidden")
+            preview.src = reader.result
+        }
+
+        if (file) {
+            reader.readAsDataURL(file) //reads the data as a URL
+            tessRun(file)
+        } else {
+            preview.src = ""
+        }
+    }
+
+    // previewFile() //calls the function named previewFile()
+    function tessRun(myImage) {
+        Tesseract.recognize(myImage)
+            .progress(message => console.log(message))
+            .catch(err => console.error(err))
+            .then(result => {
+                console.log(result)
+                // console.log(result.lines)
+                const form = ["First Name", "Last Name", "Email Address", "Password"]
+                for (let i = 0; i < result.lines.length; i++) {
+                    const element = result.lines[i];
+                    console.log(element.text)
+                    const div = document.createElement("p")
+                    div.innerHTML = form[i] + ": " + (element.text)
+                    page.appendChild(div)
+                }
+                // page.innerHTML = result.text
+            })
+            .finally(resultOrError => console.log(resultOrError))
+    }
+</script>
+<script src="tesseract.js"></script>
+
+</html>
